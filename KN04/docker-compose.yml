@@ -1,0 +1,27 @@
+services:
+  m347-kn04b-db:
+    image: ramadan54/m347:kn02b-db
+    container_name: m347-kn04b-db
+    networks:
+      kn04b-network:
+        ipv4_address: 172.20.5.2
+
+  m347-kn04b-web:
+    image: ramadan54/m347:kn02b-web
+    container_name: m347-kn04b-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - m347-kn04b-db
+    networks:
+      kn04b-network:
+        ipv4_address: 172.20.5.3
+
+networks:
+  kn04b-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          ip_range: 172.20.5.0/24
+          gateway: 172.20.5.254
