@@ -555,6 +555,7 @@ metadata:
   name: frontend-service
 spec:
   type: NodePort
+  externalTrafficPolicy: Cluster
   selector:
     app: frontend
   ports:
@@ -563,6 +564,11 @@ spec:
       targetPort: 80
       nodePort: 30100
 ```
+
+| Feld                             | Erklärung                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `externalTrafficPolicy: Cluster` | Erlaubt Traffic über alle Nodes. Ohne diese Einstellung würde nur der Node antworten auf dem der Pod direkt läuft   |
+| `externalTrafficPolicy: Local`   | Nur der Node auf dem der Pod läuft antwortet – andere Nodes leiten nicht weiter (das war das ursprüngliche Problem) |
 
 ### Deployment auf Kubernetes
 
@@ -617,10 +623,10 @@ microk8s kubectl set image deployment/frontend-deployment frontend=ramadan54/m34
 microk8s kubectl rollout status deployment/frontend-deployment
 ```
 
-| Befehl                                                    | Erklärung                                                   |
-| --------------------------------------------------------- | ----------------------------------------------------------- |
-| `kubectl set image deployment/<name> <container>=<image>` | Aktualisiert das Image eines Containers in einem Deployment |
-| `kubectl rollout status deployment/<name>`                | Zeigt den Status des Rollouts – wartet bis fertig           |
+| Befehl                                                 | Erklärung                                                   |
+| ------------------------------------------------------ | ----------------------------------------------------------- |
+| `kubectl set image deployment/<n> <container>=<image>` | Aktualisiert das Image eines Containers in einem Deployment |
+| `kubectl rollout status deployment/<n>`                | Zeigt den Status des Rollouts – wartet bis fertig           |
 
 **Screenshot: Rollout erfolgreich:**
 
@@ -746,14 +752,16 @@ microk8s kubectl apply -f deployments.yaml
 microk8s kubectl get pods
 microk8s kubectl get services
 microk8s kubectl get pods -o wide
+microk8s kubectl describe service frontend-service
 
 # App Update
 microk8s kubectl set image deployment/frontend-deployment frontend=ramadan54/m347:kn08-frontend-v5
 microk8s kubectl rollout status deployment/frontend-deployment
-microk8s kubectl rollout restart deployment <name>
+microk8s kubectl rollout restart deployment <n>
 
-# Service Type ändern
+# Service Type und Traffic Policy ändern
 microk8s kubectl patch service frontend-service -p '{"spec":{"type":"LoadBalancer"}}'
+microk8s kubectl patch service frontend-service -p '{"spec":{"externalTrafficPolicy":"Cluster"}}'
 
 # Services als NodePort exponieren
 microk8s kubectl patch service account-service -p '{"spec":{"type":"NodePort","ports":[{"port":8080,"targetPort":8080,"nodePort":30300}]}}'
@@ -762,6 +770,6 @@ microk8s kubectl patch service sendreceive-service -p '{"spec":{"type":"NodePort
 
 # Pods löschen
 microk8s kubectl delete pods --field-selector=status.phase=Failed
-microk8s kubectl delete deployment <name>
-microk8s kubectl delete service <name>
+microk8s kubectl delete deployment <n>
+microk8s kubectl delete service <n>
 ```
